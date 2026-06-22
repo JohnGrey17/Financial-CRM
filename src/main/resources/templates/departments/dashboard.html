@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Department Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet">
+
+    <style>
+        body { background: #f6f8fb; }
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            padding: 24px 16px;
+        }
+
+        .sidebar-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .division-link {
+            display: block;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .division-link:hover {
+            background: #eef4ff;
+            color: #2563eb;
+        }
+
+        .division-link.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .sidebar-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin: 18px 0 10px;
+        }
+
+        .main {
+            flex: 1;
+            padding: 24px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1.2fr 1.2fr 1.2fr auto auto;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .kpi-title {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .card-modern {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .card-modern-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-modern-body {
+            padding: 16px 20px;
+        }
+
+        .payment-status {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #fff7ed;
+            color: #c2410c;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-title" th:text="${department.name}">
+            IT департамент
+        </div>
+
+        <form th:action="@{/departments/{departmentId}/divisions(departmentId=${department.id})}"
+              method="post"
+              class="mb-4">
+
+            <div class="input-group">
+                <input type="text"
+                       class="form-control"
+                       name="name"
+                       placeholder="Новий відділ"
+                       required>
+
+                <button class="btn btn-primary" type="submit">
+                    +
+                </button>
+            </div>
+        </form>
+
+        <a class="division-link"
+           th:classappend="${selectedDivision == null} ? 'active'"
+           th:href="@{/departments/{departmentId}/dashboard(departmentId=${department.id})}">
+            Всі відділи
+        </a>
+
+        <div class="sidebar-label">Відділи</div>
+
+        <a th:each="division : ${divisions}"
+           th:href="@{/departments/{departmentId}/dashboard(
+                departmentId=${department.id},
+                divisionId=${division.id}
+           )}"
+           class="division-link"
+           th:classappend="${selectedDivision != null and selectedDivision.id == division.id} ? 'active'"
+           th:text="${division.name}">
+            Infrastructure
+        </a>
+
+    </aside>
+
+    <main class="main">
+
+        <form class="filter-row" method="get"
+              th:action="@{/departments/{departmentId}/dashboard(departmentId=${department.id})}">
+
+            <select class="form-select" name="divisionId">
+                <option value="">Всі відділи</option>
+                <option th:each="division : ${divisions}"
+                        th:value="${division.id}"
+                        th:selected="${selectedDivision != null and selectedDivision.id == division.id}"
+                        th:text="${division.name}">
+                    Відділ
+                </option>
+            </select>
+
+            <input class="form-control" type="text" value="01.01.2025 - 31.12.2025" readonly>
+
+            <select class="form-select">
+                <option>Всі статуси</option>
+                <option>DRAFT</option>
+                <option>PENDING_DIVISION_APPROVAL</option>
+                <option>PENDING_DEPARTMENT_APPROVAL</option>
+                <option>APPROVED</option>
+                <option>REJECTED</option>
+            </select>
+
+            <select class="form-select">
+                <option>Всі проекти</option>
+                <option th:each="project : ${projects}"
+                        th:if="${selectedDivision != null}"
+                        th:text="${project.name}">
+                    Project
+                </option>
+            </select>
+
+            <button class="btn btn-outline-secondary" type="submit">
+                Фільтр
+            </button>
+
+            <a class="btn btn-primary"
+               th:href="@{/departments/{departmentId}/dashboard(departmentId=${department.id})}">
+                Скинути
+            </a>
+        </form>
+
+        <div class="kpi-grid">
+
+            <div class="kpi-card">
+                <div class="kpi-title">Загальна сума</div>
+                <div class="kpi-value"
+                     th:text="${selectedDivision != null ? divisionSummary.total : departmentSummary.total}">
+                    0
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Погоджено</div>
+                <div class="kpi-value"
+                     th:text="${selectedDivision != null ? divisionSummary.approved : departmentSummary.approved}">
+                    0
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">На розгляді</div>
+                <div class="kpi-value"
+                     th:text="${selectedDivision != null ? divisionSummary.pending : departmentSummary.pending}">
+                    0
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Відхилено</div>
+                <div class="kpi-value"
+                     th:text="${selectedDivision != null ? divisionSummary.rejected : departmentSummary.rejected}">
+                    0
+                </div>
+            </div>
+
+        </div>
+
+        <div class="content-grid">
+
+            <div class="card-modern" th:if="${selectedDivision == null}">
+                <div class="card-modern-header">
+                    Відділи департаменту
+                </div>
+
+                <div class="card-modern-body">
+                    <table class="table table-vcenter">
+                        <thead>
+                        <tr>
+                            <th>Назва відділу</th>
+                            <th>Перегляд</th>
+                            <th>Детальна сторінка</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="division : ${divisions}">
+                            <td th:text="${division.name}">Infrastructure</td>
+                            <td>
+                                <a class="btn btn-sm btn-primary"
+                                   th:href="@{/departments/{departmentId}/dashboard(
+                                        departmentId=${department.id},
+                                        divisionId=${division.id}
+                                   )}">
+                                    Показати
+                                </a>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/divisions/{id}(id=${division.id})}">
+                                    Відкрити
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(divisions)}">
+                            <td colspan="3" class="text-muted">
+                                У департаменті ще немає відділів.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-modern" th:if="${selectedDivision != null}">
+                <div class="card-modern-header">
+                    <span th:text="${selectedDivision.name}">Вибраний відділ</span>
+
+                    <a class="btn btn-sm btn-outline-primary"
+                       th:href="@{/divisions/{id}(id=${selectedDivision.id})}">
+                        Відкрити сторінку відділу
+                    </a>
+                </div>
+
+                <div class="card-modern-body">
+
+                    <div class="mb-3">
+                        <h3>Проекти відділу</h3>
+                    </div>
+
+                    <table class="table table-vcenter">
+                        <thead>
+                        <tr>
+                            <th>Проект</th>
+                            <th>Дія</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="project : ${projects}">
+                            <td th:text="${project.name}">Project</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/projects/{id}(id=${project.id})}">
+                                    Відкрити проект
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(projects)}">
+                            <td colspan="2" class="text-muted">
+                                У цьому відділі ще немає проектів.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card-modern">
+            <div class="card-modern-header">
+                Платежі
+            </div>
+
+            <div class="card-modern-body">
+                <table class="table table-vcenter">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Назва</th>
+                        <th>Сума</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Дія</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="payment : ${selectedDivision != null ? divisionPendingPayments : departmentPendingApprovals}">
+                        <td th:text="${payment.id}">1</td>
+                        <td th:text="${payment.name}">AWS</td>
+                        <td th:text="${payment.amount}">1000</td>
+                        <td th:text="${payment.paymentDate}">2026-01-01</td>
+                        <td>
+                            <span class="payment-status" th:text="${payment.status}">
+                                STATUS
+                            </span>
+                        </td>
+
+                        <td>
+                            <form th:if="${selectedDivision != null}"
+                                  style="display:inline"
+                                  th:action="@{/divisions/{divisionId}/payments/{paymentId}/approve(
+                                      divisionId=${selectedDivision.id},
+                                      paymentId=${payment.id}
+                                  )}"
+                                  method="post">
+                                <button class="btn btn-success btn-sm">
+                                    Погодити
+                                </button>
+                            </form>
+
+                            <form th:if="${selectedDivision != null}"
+                                  style="display:inline"
+                                  th:action="@{/divisions/{divisionId}/payments/{paymentId}/reject(
+                                      divisionId=${selectedDivision.id},
+                                      paymentId=${payment.id}
+                                  )}"
+                                  method="post">
+                                <button class="btn btn-danger btn-sm">
+                                    Відхилити
+                                </button>
+                            </form>
+
+                            <form th:if="${selectedDivision == null}"
+                                  style="display:inline"
+                                  th:action="@{/departments/{departmentId}/payments/{paymentId}/approve-from-dashboard(
+                                      departmentId=${department.id},
+                                      paymentId=${payment.id}
+                                  )}"
+                                  method="post">
+                                <button class="btn btn-success btn-sm">
+                                    Погодити
+                                </button>
+                            </form>
+
+                            <form th:if="${selectedDivision == null}"
+                                  style="display:inline"
+                                  th:action="@{/departments/{departmentId}/payments/{paymentId}/reject-from-dashboard(
+                                      departmentId=${department.id},
+                                      paymentId=${payment.id}
+                                  )}"
+                                  method="post">
+                                <button class="btn btn-danger btn-sm">
+                                    Відхилити
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${selectedDivision != null and #lists.isEmpty(divisionPendingPayments)}">
+                        <td colspan="6" class="text-muted">
+                            Немає платежів на погодження відділу.
+                        </td>
+                    </tr>
+
+                    <tr th:if="${selectedDivision == null and #lists.isEmpty(departmentPendingApprovals)}">
+                        <td colspan="6" class="text-muted">
+                            Немає платежів на погодження департаменту.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
+
+</body>
+</html>

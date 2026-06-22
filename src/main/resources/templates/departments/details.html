@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="uk"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Department Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="container-xl mt-4">
+
+        <h1 th:text="${department.name}">
+            Department
+        </h1>
+
+        <div class="row row-cards mt-3">
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-muted">Загальна сума</div>
+                        <h2 th:text="${summary.total}"></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-muted">Погоджено</div>
+                        <h2 th:text="${summary.approved}"></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-muted">На розгляді</div>
+                        <h2 th:text="${summary.pending}"></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-muted">Відхилено</div>
+                        <h2 th:text="${summary.rejected}"></h2>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card mt-4">
+
+            <div class="card-header">
+                <h3>Відділи департаменту</h3>
+            </div>
+
+            <div class="card-body">
+
+                <ul>
+
+                    <li th:each="division : ${divisions}">
+
+                        <a th:href="@{/divisions/{id}(id=${division.id})}"
+                           th:text="${division.name}">
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        <div class="card mt-4">
+
+            <div class="card-header">
+                <h3>Очікують погодження департаменту</h3>
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-vcenter">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+                        <th>Назва</th>
+                        <th>Сума</th>
+                        <th>Статус</th>
+                        <th>Дія</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="payment : ${pendingApprovals}">
+
+                        <td th:text="${payment.id}"></td>
+
+                        <td th:text="${payment.name}"></td>
+
+                        <td th:text="${payment.amount}"></td>
+
+                        <td th:text="${payment.status}"></td>
+
+                        <td>
+
+                            <form
+                                    style="display:inline"
+
+                                    th:action="@{/departments/{departmentId}/payments/{paymentId}/approve(
+                                        departmentId=${department.id},
+                                        paymentId=${payment.id}
+                                    )}"
+
+                                    method="post">
+
+                                <button
+                                        class="btn btn-success btn-sm">
+
+                                    Погодити
+
+                                </button>
+
+                            </form>
+
+                            <form
+                                    style="display:inline"
+
+                                    th:action="@{/departments/{departmentId}/payments/{paymentId}/reject(
+                                        departmentId=${department.id},
+                                        paymentId=${payment.id}
+                                    )}"
+
+                                    method="post">
+
+                                <button
+                                        class="btn btn-danger btn-sm">
+
+                                    Відхилити
+
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

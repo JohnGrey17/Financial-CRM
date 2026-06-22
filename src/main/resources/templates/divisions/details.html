@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="uk"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Відділ</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css"
+          rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f5f7fb;
+        }
+
+        .layout{
+            display:flex;
+            min-height:100vh;
+        }
+
+        .sidebar{
+            width:260px;
+            background:white;
+            border-right:1px solid #e5e7eb;
+            padding:20px;
+        }
+
+        .content{
+            flex:1;
+            padding:20px;
+        }
+
+        .project-link{
+            display:block;
+            padding:12px;
+            border-radius:10px;
+            margin-bottom:8px;
+            text-decoration:none;
+            color:#111827;
+            font-weight:500;
+        }
+
+        .project-link:hover{
+            background:#edf2ff;
+        }
+
+        .project-link.active{
+            background:#2563eb;
+            color:white;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- LEFT SIDEBAR -->
+
+    <div class="sidebar">
+
+        <h1 class="mb-4"
+            th:text="${division.name}">
+            Відділ
+        </h1>
+
+        <form th:action="@{/divisions/{id}/projects(id=${division.id})}"
+              method="post"
+              class="mb-4">
+
+            <div class="input-group">
+
+                <input type="text"
+                       name="name"
+                       class="form-control"
+                       placeholder="Новий проект"
+                       required>
+
+                <button class="btn btn-primary"
+                        type="submit">
+                    +
+                </button>
+
+            </div>
+
+        </form>
+
+        <div class="text-muted mb-3">
+            Проекти
+        </div>
+
+        <a th:each="project : ${projects}"
+           th:href="@{/divisions/{id}(id=${division.id}, projectId=${project.id})}"
+           th:text="${project.name}"
+           th:class="${selectedProjectId != null and selectedProjectId == project.id}
+                ? 'project-link active'
+                : 'project-link'">
+            Project
+        </a>
+
+    </div>
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+        <form method="get"
+              th:action="@{/divisions/{id}(id=${division.id})}">
+
+            <input type="hidden"
+                   name="projectId"
+                   th:value="${selectedProjectId}">
+
+            <div class="row mb-4">
+
+                <div class="col-md-10">
+
+                    <select name="status"
+                            class="form-select">
+
+                        <option value="">
+                            Всі статуси
+                        </option>
+
+                        <option th:each="status : ${T(com.example.budget_planner.enums.PaymentStatus).values()}"
+                                th:value="${status}"
+                                th:text="${status}"
+                                th:selected="${selectedStatus == status}">
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <button class="btn btn-primary w-100">
+                        Фільтр
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+        <!-- PAYMENTS -->
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div class="d-flex justify-content-between w-100 align-items-center">
+
+                    <div>
+
+                        <h3 class="card-title">
+                            Платежі проекту
+                        </h3>
+
+                        <div class="text-muted">
+
+                            Перегляд платежів обраного проекту
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <a th:if="${selectedProjectId != null}"
+                           th:href="@{/projects/{id}(id=${selectedProjectId})}"
+                           class="btn btn-outline-primary">
+
+                            Відкрити проект
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-vcenter card-table">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+                        <th>Назва</th>
+                        <th>Сума</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Дії</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:if="${#lists.isEmpty(payments)}">
+
+                        <td colspan="6">
+                            Платежів не знайдено.
+                        </td>
+
+                    </tr>
+
+                    <tr th:each="payment : ${payments}">
+
+                        <td th:text="${payment.id}"></td>
+
+                        <td th:text="${payment.name}"></td>
+
+                        <td th:text="${payment.amount}"></td>
+
+                        <td th:text="${payment.paymentDate}"></td>
+
+                        <td th:text="${payment.status}"></td>
+
+                        <td>
+
+                            <!-- DRAFT -->
+
+                            <form th:if="${payment.status.name() == 'DRAFT'}"
+                                  th:action="@{/projects/{projectId}/payments/{paymentId}/submit(
+                                        projectId=${selectedProjectId},
+                                        paymentId=${payment.id}
+                                  )}"
+                                  method="post"
+                                  style="display:inline">
+
+                                <button class="btn btn-primary btn-sm"
+                                        type="submit">
+
+                                    На погодження відділу
+
+                                </button>
+
+                            </form>
+
+                            <!-- PENDING_DIVISION_APPROVAL -->
+
+                            <div th:if="${payment.status.name() == 'PENDING_DIVISION_APPROVAL'}">
+
+                                <form style="display:inline"
+                                      method="post"
+
+                                      th:action="@{/divisions/{divisionId}/payments/{paymentId}/approve(
+                                            divisionId=${division.id},
+                                            paymentId=${payment.id}
+                                      )}">
+
+                                    <button class="btn btn-success btn-sm">
+
+                                        Погодити
+
+                                    </button>
+
+                                </form>
+
+                                <form style="display:inline"
+                                      method="post"
+
+                                      th:action="@{/divisions/{divisionId}/payments/{paymentId}/reject(
+                                            divisionId=${division.id},
+                                            paymentId=${payment.id}
+                                      )}">
+
+                                    <button class="btn btn-danger btn-sm">
+
+                                        Відхилити
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                            <span th:if="${payment.status.name() != 'DRAFT'
+                                    and payment.status.name() != 'PENDING_DIVISION_APPROVAL'}">
+
+                                -
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

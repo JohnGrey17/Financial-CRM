@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Project Details</title>
+
+    ```
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet">
+    ```
+
+</head>
+<body>
+
+<div class="page">
+    <div class="page-wrapper">
+        <div class="container-xl mt-4">
+
+            ```
+            <h1 th:text="${project.name}">Project name</h1>
+
+            <div class="row row-cards mt-3">
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-muted">Загальна сума</div>
+                            <h2 th:text="${summary.total}">0</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-muted">Погоджено</div>
+                            <h2 th:text="${summary.approved}">0</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-muted">На розгляді</div>
+                            <h2 th:text="${summary.pending}">0</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="text-muted">Відхилено</div>
+                            <h2 th:text="${summary.rejected}">0</h2>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Таблиця платежів -->
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Платежі проекту</h3>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Назва</th>
+                            <th>Сума</th>
+                            <th>Дата</th>
+                            <th>Статус</th>
+                            <th>Дія</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        <tr th:each="payment : ${payments}">
+
+                            <td th:text="${payment.id}">1</td>
+
+                            <td th:text="${payment.name}">
+                                AWS Servers
+                            </td>
+
+                            <td th:text="${payment.amount}">
+                                150000
+                            </td>
+
+                            <td th:text="${payment.paymentDate}">
+                                2026-06-21
+                            </td>
+
+                            <td>
+                            <span class="badge"
+                                  th:text="${payment.status}">
+                                DRAFT
+                            </span>
+                            </td>
+
+                            <td>
+
+                                <form
+                                        th:if="${payment.status.name() == 'DRAFT'}"
+                                        th:action="@{/projects/{projectId}/payments/{paymentId}/submit(
+                                        projectId=${project.id},
+                                        paymentId=${payment.id}
+                                    )}"
+                                        method="post">
+
+                                    <button
+                                            type="submit"
+                                            class="btn btn-primary btn-sm">
+
+                                        Відправити на погодження
+
+                                    </button>
+
+                                </form>
+
+                                <span
+                                        th:if="${payment.status.name() != 'DRAFT'}"
+                                        class="text-muted">
+
+                                -
+
+                            </span>
+
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+            <!-- Новий платіж -->
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Новий платіж</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <form th:action="@{/projects/{id}/payments(id=${project.id})}"
+                          method="post">
+
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    Назва платежу
+                                </label>
+
+                                <input type="text"
+                                       name="name"
+                                       class="form-control"
+                                       placeholder="Наприклад: AWS сервери"
+                                       required>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    Сума
+                                </label>
+
+                                <input type="number"
+                                       name="amount"
+                                       step="0.01"
+                                       class="form-control"
+                                       placeholder="150000"
+                                       required>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    Дата платежу
+                                </label>
+
+                                <input type="date"
+                                       name="paymentDate"
+                                       class="form-control"
+                                       required>
+                            </div>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+
+                            Створити платіж
+
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+    ```
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
+
+</body>
+</html>
